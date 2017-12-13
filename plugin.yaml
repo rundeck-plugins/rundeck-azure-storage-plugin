@@ -1,0 +1,158 @@
+name: azure-storage-remote-plugin
+version: 1.2.1
+rundeckPluginVersion: 1.2
+author: ltoledo
+date: Tue Nov 28 2017
+providers:
+  - name: azure-storage-cp-step
+    service: RemoteScriptNodeStep
+    title: 'Azure / Storage / Remote Copy'
+    description: 'Copies a remote file or Azure Storage Object to another location or in Azure Storage.'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: azure-cp.py
+    script-args: ${config.container} ${config.source} ${config.destination}
+    config:
+      - type: String
+        name: container
+        title: Container Name
+        description: 'the Azure Container Name'
+      - type: String
+        name: source
+        title: source
+        description: 'the Azure Storage URI or local path (for example, use azure://path or azure://path/file.ext to reference an Azure container)'
+      - type: String
+        name: destination
+        title: destination
+        description: 'the Azure Storage URI or local path (for example, use azure://path or azure://path/file.ext to reference an Azure container)' 
+      - type: String
+        name: account_name
+        title: Account Name
+        description: 'The Azure Storage Account Name'
+        renderingOptions:
+          grouping: secondary
+          groupName: Connection     
+      - type: String
+        name: access_key
+        title: Access Key
+        description: 'Access Key ID'
+        renderingOptions:
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+          storage-file-meta-filter: "Rundeck-data-type=password"
+          grouping: secondary
+          groupName: Connection
+  - name: azure-storage-sync-step
+    service: RemoteScriptNodeStep
+    title: 'Azure / Storage / Remote Syncs'
+    description: 'Syncs directories with Azure Storage.'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: azure-sync.py
+    script-args: ${config.container} ${config.source} ${config.destination}
+    config:
+      - type: String
+        name: container
+        title: Container Name
+        description: 'the Azure Container Name'
+      - type: String
+        name: source
+        title: source
+        description: 'the Azure Storage URI or local path (for example, use azure://path or azure://path/file.ext to reference an Azure container)'
+      - type: String
+        name: destination
+        title: destination
+        description: 'the Azure Storage URI or local path (for example, use azure://path or azure://path/file.ext to reference an Azure container)'
+      - type: String
+        name: account_name
+        title: Account Name
+        description: 'The Azure Storage Account Name'
+        renderingOptions:
+          grouping: secondary
+          groupName: Connection     
+      - type: String
+        name: access_key
+        title: Access Key
+        description: 'Access Key ID'
+        renderingOptions:
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+          storage-file-meta-filter: "Rundeck-data-type=password"
+          grouping: secondary
+          groupName: Connection
+  - name: azure-storage-ls-step
+    service: WorkflowNodeStep
+    title: 'Azure / Storage / List Blobs'
+    description: 'List Azure Storage blobs and common prefixes under a prefix or all Azure Storage.'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: azure-ls.py
+    script-args: ${config.container} ${config.prefix}
+    config:
+      - type: String
+        name: container
+        title: Container Name
+        description: 'the Azure Container Name'
+      - type: String
+        name: prefix
+        title: Prefix
+        description: 'Filter by blob prefix (it could be a subfolder name inside the container)'
+      - type: String
+        name: account_name
+        title: Account Name
+        description: 'The Azure Storage Account Name'
+        renderingOptions:
+          grouping: secondary
+          groupName: Connection     
+      - type: String
+        name: access_key
+        title: Access Key
+        description: 'Access Key ID'
+        renderingOptions:
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+          storage-file-meta-filter: "Rundeck-data-type=password"
+          grouping: secondary
+          groupName: Connection
+  - name: azure-storage-rm-step
+    service: WorkflowNodeStep
+    title: 'Azure / Storage / Remove Blobs'
+    description: 'Deletes an Azure Storage blob from a container.'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: azure-rm.py
+    script-args: ${config.container} ${config.prefix} ${config.blob_path}
+    config:
+      - type: String
+        name: container
+        title: Container Name
+        description: 'the Azure Container Name'
+      - type: String
+        name: blob_path
+        title: Blob Path
+        description: "Remove a particular blob path (don't use if you want to remote a list of files)"
+      - type: String
+        name: prefix
+        title: Prefix
+        description: 'Filter by blob prefix (it could be a subfolder name inside the container)'
+      - type: String
+        name: account_name
+        title: Account Name
+        description: 'The Azure Storage Account Name'
+        renderingOptions:
+          grouping: secondary
+          groupName: Connection     
+      - type: String
+        name: access_key
+        title: Access Key
+        description: 'Access Key ID'
+        renderingOptions:
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+          storage-file-meta-filter: "Rundeck-data-type=password"
+          grouping: secondary
+          groupName: Connection
