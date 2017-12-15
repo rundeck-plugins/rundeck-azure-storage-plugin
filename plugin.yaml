@@ -1,5 +1,5 @@
 name: rundeck-azure-storage-plugin
-version: 1.2.1
+version: 1.0.0
 rundeckPluginVersion: 1.2
 author: ltoledo
 date: Tue Nov 28 2017
