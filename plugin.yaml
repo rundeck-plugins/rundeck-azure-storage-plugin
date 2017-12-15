@@ -1,4 +1,4 @@
-name: azure-storage-remote-plugin
+name: rundeck-azure-storage-plugin
 version: 1.2.1
 rundeckPluginVersion: 1.2
 author: ltoledo
