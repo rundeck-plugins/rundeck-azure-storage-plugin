@@ -12,7 +12,7 @@ ext.pluginDescription = "Sincronize Azure Storage with a folder on remote nodes"
 ext.sopsCopyright = "© 2017, Rundeck, Inc."
 ext.sopsUrl = "http://rundeck.com"
 ext.buildDateString=new Date().format("yyyy-MM-dd'T'HH:mm:ssX")
-ext.archivesBaseName = "azure-storage-remote-plugin"
+ext.archivesBaseName = "rundeck-azure-storage-plugin"
 ext.pluginBaseFolder = "."
 
 scmVersion {
