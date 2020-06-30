@@ -1,18 +1,34 @@
-import azure.common
 import argparse
 import os
 import json
+import logging
+import sys
 
-from azure.storage import CloudStorageAccount
+from azure.storage.blob import ContainerClient
+
+log_level = 'INFO'
+if os.environ.get('RD_JOB_LOGLEVEL') == 'DEBUG':
+    log_level = 'DEBUG'
+else:
+    log_level = 'ERROR'
+
+# Create a logger for the 'azure.storage.blob' SDK
+logger = logging.getLogger('azure.storage.blob')
+logger.setLevel(log_level)
+
+# Configure a console output
+handler = logging.StreamHandler(stream=sys.stdout)
+logger.addHandler(handler)
 
 parser = argparse.ArgumentParser(description='Azure storage LS.')
 parser.add_argument('container', help='Azure Container Name')
 parser.add_argument('prefix', help='Prefix')
 args = parser.parse_args()
 
-account_name=None
-access_key=None
-prefix=None
+account_name = None
+access_key = None
+prefix = None
+protocol = "https"
 
 if "RD_CONFIG_ACCOUNT_NAME" in os.environ:
     account_name = os.environ["RD_CONFIG_ACCOUNT_NAME"]
@@ -20,28 +36,31 @@ if "RD_CONFIG_ACCESS_KEY" in os.environ:
     access_key = os.environ["RD_CONFIG_ACCESS_KEY"]
 if "RD_CONFIG_PREFIX" in os.environ:
     prefix = os.environ["RD_CONFIG_PREFIX"]
+if "RD_CONFIG_PROTOCOL" in os.environ:
+    protocol = os.environ["RD_CONFIG_PROTOCOL"]
 
-account = CloudStorageAccount(account_name, access_key)
-blockblob_service = account.create_block_blob_service()
+connection_string = "DefaultEndpointsProtocol={};AccountName={};AccountKey={};EndpointSuffix=core.windows.net".format(
+    protocol, account_name, access_key)
+
+generator = ContainerClient.from_connection_string(conn_str=connection_string,
+                                                   container_name=args.container,
+                                                   logging_enable=True)
 
 if not prefix:
-    generator = blockblob_service.list_blobs(args.container)
+    blob_list = generator.list_blobs()
 else:
-    generator = blockblob_service.list_blobs(args.container,prefix=prefix)
+    blob_list = generator.list_blobs(name_starts_with=prefix)
 
 result = list()
 
-
-for blob in generator:
-
+for blob in blob_list:
     result.append({'name': blob.name,
-                   'last_modified':blob.properties.last_modified.strftime("%Y-%m-%d %H:%M:%S") ,
-                   'content_length':blob.properties.content_length,
-                   'blob_type':blob.properties.blob_type,
-                   'content_type':blob.properties.content_settings.content_type,
-                   'content_md5':blob.properties.content_settings.content_md5,
-                   'etag':blob.properties.etag})
+                   'last_modified': blob.last_modified.strftime("%Y-%m-%d %H:%M:%S"),
+                   'content_length': blob.size,
+                   'blob_type': blob.blob_type.name,
+                   'content_type': blob.content_settings.content_type,
+                   'etag': blob.etag
+                   })
 
-json_response = json.dumps(result) 
-print json_response
-
+json_response = json.dumps(result)
+print(json_response)

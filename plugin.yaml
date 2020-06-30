@@ -1,8 +1,16 @@
 name: rundeck-azure-storage-plugin
-version: 1.0.0
-rundeckPluginVersion: 1.2
-author: ltoledo
-date: Tue Nov 28 2017
+rundeckPluginVersion: 2.0
+author: "@author@"
+date: "@date@"
+version: "@version@"
+url: "@url@"
+description: "Azure storage python plugin"
+rundeckCompatibilityVersion: "3.x"
+targetHostCompatibility: "all"
+license: "Apache 2.0"
+tags:
+    - script
+    - azure
 providers:
   - name: azure-storage-cp-step
     service: RemoteScriptNodeStep
@@ -24,7 +32,16 @@ providers:
       - type: String
         name: destination
         title: destination
-        description: 'the Azure Storage URI or local path (for example, use azure://path or azure://path/file.ext to reference an Azure container)' 
+        description: 'the Azure Storage URI or local path (for example, use azure://path or azure://path/file.ext to reference an Azure container)'
+      - name: protocol
+        title: Protocol
+        description: 'Azure connection protocol'
+        type: Select
+        values: "http, https"
+        default: 'https'
+        renderingOptions:
+          grouping: secondary
+          groupName: Connection
       - type: String
         name: account_name
         title: Account Name
@@ -64,6 +81,15 @@ providers:
         name: destination
         title: destination
         description: 'the Azure Storage URI or local path (for example, use azure://path or azure://path/file.ext to reference an Azure container)'
+      - name: protocol
+        title: Protocol
+        description: 'Azure connection protocol'
+        type: Select
+        values: "http, https"
+        default: 'https'
+        renderingOptions:
+          grouping: secondary
+          groupName: Connection
       - type: String
         name: account_name
         title: Account Name
@@ -99,6 +125,15 @@ providers:
         name: prefix
         title: Prefix
         description: 'Filter by blob prefix (it could be a subfolder name inside the container)'
+      - name: protocol
+        title: Protocol
+        description: 'Azure connection protocol'
+        type: Select
+        values: "http, https"
+        default: 'https'
+        renderingOptions:
+          grouping: secondary
+          groupName: Connection
       - type: String
         name: account_name
         title: Account Name
@@ -124,7 +159,7 @@ providers:
     plugin-type: script
     script-interpreter: python -u
     script-file: azure-rm.py
-    script-args: ${config.container} ${config.prefix} ${config.blob_path}
+    script-args: ${config.container} ${config.prefix}
     config:
       - type: String
         name: container
@@ -138,6 +173,15 @@ providers:
         name: prefix
         title: Prefix
         description: 'Filter by blob prefix (it could be a subfolder name inside the container)'
+      - name: protocol
+        title: Protocol
+        description: 'Azure connection protocol'
+        type: Select
+        values: "http, https"
+        default: 'https'
+        renderingOptions:
+          grouping: secondary
+          groupName: Connection
       - type: String
         name: account_name
         title: Account Name
