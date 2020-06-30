@@ -16,6 +16,7 @@ The modules can be installed with the following command:
 ```
 pip install python-magic
 pip install azure-storage-blob
+pip install aiohttp
 ```
 
 ## List commands
