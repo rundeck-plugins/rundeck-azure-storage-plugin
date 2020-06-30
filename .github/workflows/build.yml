@@ -28,6 +28,6 @@ jobs:
       uses: actions/upload-artifact@v1.0.0
       with:
         # Artifact name
-        name: powershell-aws-cli-s3-steps-${{ steps.get_version.outputs.VERSION }}
+        name: rundeck-azure-storage-plugin-${{ steps.get_version.outputs.VERSION }}
         # Directory containing files to upload
         path: ./build/libs/rundeck-azure-storage-plugin-${{ steps.get_version.outputs.VERSION }}.zip
