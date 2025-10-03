@@ -1,0 +1,16 @@
+# Python dependencies for Rundeck Azure Storage Plugin
+# Install with: pip install -r requirements.txt
+
+# Azure Storage SDK
+azure-storage-blob>=12.17.0
+
+# File type detection
+python-magic>=0.4.27
+
+# HTTP client for async operations
+aiohttp>=3.8.5
+
+# Additional security considerations:
+# - Use virtual environments to isolate dependencies
+# - Regularly update to latest versions for security patches
+# - Monitor for CVEs in these dependencies
