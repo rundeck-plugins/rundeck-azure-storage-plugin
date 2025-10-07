@@ -1,48 +1,128 @@
+name: Release
+
 on:
   push:
-    # Sequence of patterns matched against refs/tags
     tags:
-    - '*' # Push events to matching v*, i.e. v1.0, v20.15.10
+      - 'v*.*.*'  # Only trigger on version tags
+      - '*.*.*'   # Support both v-prefixed and non-prefixed tags
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release'
+        required: true
+        type: string
 
-name: Create Release
+permissions:
+  contents: write
+  packages: write
 
 jobs:
-  build:
-    name: Upload Release Asset
+  release:
+    name: Create Release
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: set up JDK 1.8
-        uses: actions/setup-java@v1
-        with:
-          java-version: 1.8
-      - name: Build with Gradle
-        run: ./gradlew build
-      - name: Get Release Version
-        id: get_version
-        run: VERSION=$(./gradlew currentVersion -q -Prelease.quiet) && echo ::set-output name=VERSION::$VERSION
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ steps.get_version.outputs.VERSION }}
-          draft: false
-          prerelease: false
 
-      - name: Upload Plugin (zip)
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v2
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v3
+        with:
+          gradle-home-cache-cleanup: true
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build release
+        run: ./gradlew clean build --no-daemon --stacktrace
+
+      - name: Get version
+        id: get_version
+        run: |
+          VERSION=$(./gradlew currentVersion -q -Prelease.quiet)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Verify artifact exists
+        run: |
+          ARTIFACT_PATH="./build/libs/rundeck-azure-storage-plugin-${{ steps.get_version.outputs.VERSION }}.zip"
+          if [ ! -f "$ARTIFACT_PATH" ]; then
+            echo "Expected artifact not found: $ARTIFACT_PATH"
+            echo "Available files:"
+            ls -la ./build/libs/
+            exit 1
+          fi
+          echo "Artifact verified: $ARTIFACT_PATH"
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          cat << 'EOF' > release_notes.md
+          ## Rundeck Azure Storage Plugin ${{ steps.get_version.outputs.VERSION }}
+          
+          ### Features
+          - Azure Storage integration for Rundeck
+          - Remote copy operations with Azure blobs
+          - Directory synchronization capabilities
+          - Secure HTTPS-only connections
+          
+          ### Security Improvements
+          - Updated to modern Gradle 8.10.2
+          - Enhanced build security
+          - Secure Python dependency management
+          
+          ### Installation
+          1. Download the plugin zip file
+          2. Copy to `$RDECK_BASE/libext/` folder
+          3. Restart Rundeck
+          4. Install Python dependencies: `pip install -r requirements.txt`
+          
+          ### Requirements
+          - Java 8+ (for Rundeck)
+          - Python 3.6+ with azure-storage-blob, python-magic, and aiohttp packages
+          
+          See the [README](https://github.com/rundeck-plugins/rundeck-azure-storage-plugin/blob/main/README.md) for detailed installation and usage instructions.
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ steps.get_version.outputs.VERSION }}
+          body_path: release_notes.md
+          files: |
+            ./build/libs/rundeck-azure-storage-plugin-${{ steps.get_version.outputs.VERSION }}.zip
+            requirements.txt
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'SNAPSHOT') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
+          generate_release_notes: true
+          make_latest: ${{ !contains(github.ref_name, 'SNAPSHOT') && !contains(github.ref_name, 'beta') && !contains(github.ref_name, 'alpha') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./build/libs/rundeck-azure-storage-plugin-${{ steps.get_version.outputs.VERSION }}.zip
-          asset_name: rundeck-azure-storage-plugin-${{ steps.get_version.outputs.VERSION }}.zip
-          asset_content_type: application/zip
+
+      - name: Upload to GitHub Packages (optional)
+        if: success() && !contains(github.ref_name, 'SNAPSHOT')
+        run: ./gradlew publishToMavenLocal
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

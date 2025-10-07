@@ -1,17 +1,14 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-}
 plugins {
-    id 'pl.allegro.tech.build.axion-release' version '1.11.0'
+    id 'base'
+    id 'maven-publish'
+    id 'pl.allegro.tech.build.axion-release' version '1.18.11'
 }
 
-ext.pluginName = 'Azure Storge Script Plugin'
-ext.pluginDescription = "Sincronize Azure Storage with a folder on remote nodes"
+ext.pluginName = 'Azure Storage Script Plugin'
+ext.pluginDescription = "Synchronize Azure Storage with a folder on remote nodes"
 ext.sopsCopyright = "© 2017, Rundeck, Inc."
-ext.sopsUrl = "http://rundeck.com"
-ext.buildDateString=new Date().format("yyyy-MM-dd'T'HH:mm:ssX")
+ext.sopsUrl = "https://rundeck.com"
+ext.buildDateString = new Date().format("yyyy-MM-dd'T'HH:mm:ssX")
 ext.archivesBaseName = "rundeck-azure-storage-plugin"
 ext.pluginBaseFolder = "."
 
@@ -20,14 +17,14 @@ scmVersion {
     tag {
         prefix = ''
         versionSeparator = ''
-        def origDeserialize=deserialize
-        //apend .0 to satisfy semver if the tag version is only X.Y
-        deserialize = { config, position, tagName ->
-            def orig = origDeserialize(config, position, tagName)
-            if (orig.split('\\.').length < 3) {
-                orig += ".0"
+        // Custom deserializer to ensure semver compatibility
+        deserializer = { config, position, tagName ->
+            // Append .0 to satisfy semver if the tag version is only X.Y
+            def version = tagName
+            if (version.split('\\.').length < 3) {
+                version += ".0"
             }
-            orig
+            version
         }
     }
 }
@@ -35,4 +32,84 @@ scmVersion {
 project.version = scmVersion.version
 ext.archiveFilename = ext.archivesBaseName + '-' + version 
 
-apply from: 'https://raw.githubusercontent.com/rundeck-plugins/build-zip/master/build.gradle'
+// Modern repository configuration
+repositories {
+    mavenCentral()
+    gradlePluginPortal()
+}
+
+// Security configurations
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+// Modern plugin zip task
+task pluginZip(type: Jar) {
+    destinationDirectory = file("build/libs")
+    archiveBaseName = project.ext.archivesBaseName
+    archiveVersion = project.version
+    archiveClassifier = ''
+    archiveExtension = 'zip'
+
+    from("${project.buildDir}/zip-contents") {
+        include("*.yaml")
+        include("resources/**")
+        include("contents/*")
+        into(archiveFilename)
+    }
+
+    manifest {
+        attributes(
+            'Rundeck-Plugin-Name': pluginName.toString(),
+            'Rundeck-Plugin-Description': pluginDescription.toString(),
+            'Rundeck-Plugin-Archive': 'true',
+            'Rundeck-Plugin-File-Version': version,
+            'Rundeck-Plugin-Author': sopsCopyright,
+            'Rundeck-Plugin-URL': sopsUrl,
+            'Rundeck-Plugin-Date': buildDateString
+        )
+    }
+}
+
+pluginZip.doFirst {
+    def assetsMap = new Properties()
+    def tokens = assetsMap + [
+        version    : version,
+        date       : new Date().format("yyyy-MM-dd'T'HH:mm:ssX").toString(),
+        author     : sopsCopyright,
+        url        : sopsUrl,
+        title      : pluginName,
+        description: pluginDescription,
+        name       : archivesBaseName.toString(),
+    ]
+
+    copy {
+        from("${project.projectDir}/resources") {
+            include '**/*'
+            into "resources"
+        }
+        from("${project.projectDir}/contents") {
+            into "contents"
+        }
+        from("${project.projectDir}/plugin.yaml") {
+            filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: tokens)
+            exclude '**/*.png'
+        }
+        into "${project.buildDir}/zip-contents"
+    }
+}
+
+publishing {
+    publications {
+        mavenZip(MavenPublication) {
+            artifact pluginZip
+        }
+    }
+}
+
+defaultTasks 'clean', 'pluginZip'
+
+build.dependsOn pluginZip
+
+task install(dependsOn: ['build', 'publishToMavenLocal'])
