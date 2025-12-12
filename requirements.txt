@@ -10,6 +10,9 @@ python-magic>=0.4.27
 # HTTP client for async operations
 aiohttp>=3.8.5
 
+# CVE-2025-66471 / CVE-2025-66418
+urllib3>=2.6.0
+
 # Additional security considerations:
 # - Use virtual environments to isolate dependencies
 # - Regularly update to latest versions for security patches
