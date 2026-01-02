@@ -4,6 +4,8 @@ plugins {
     id 'pl.allegro.tech.build.axion-release' version '1.18.11'
 }
 
+group = 'com.github.rundeck-plugins'
+
 ext.pluginName = 'Azure Storage Script Plugin'
 ext.pluginDescription = "Synchronize Azure Storage with a folder on remote nodes"
 ext.sopsCopyright = "© 2017, Rundeck, Inc."
@@ -30,6 +32,8 @@ scmVersion {
 }
 
 project.version = scmVersion.version
+// Override version for Grails 7 upgrade
+project.version = '1.0.8-grails7-upgrade-test'
 ext.archiveFilename = ext.archivesBaseName + '-' + version 
 
 // Modern repository configuration
