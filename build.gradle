@@ -33,7 +33,7 @@ scmVersion {
 
 project.version = scmVersion.version
 // Override version for Grails 7 upgrade
-project.version = '1.0.8-grails7-upgrade-test'
+project.version = '1.0.9-grails7-upgrade-test'
 ext.archiveFilename = ext.archivesBaseName + '-' + version 
 
 // Modern repository configuration
