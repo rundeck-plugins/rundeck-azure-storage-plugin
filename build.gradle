@@ -14,7 +14,7 @@ ext.archivesBaseName = "rundeck-azure-storage-plugin"
 ext.pluginBaseFolder = "."
 
 // Override version for Grails 7 upgrade
-project.version = '1.0.10-grails7-upgrade-test'
+project.version = '1.0.11-grails7-upgrade-test'
 ext.archiveFilename = ext.archivesBaseName + '-' + version 
 
 // Modern repository configuration
