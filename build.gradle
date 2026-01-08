@@ -1,9 +1,10 @@
 plugins {
     id 'base'
+    id 'pl.allegro.tech.build.axion-release' version '1.17.2'
     id 'maven-publish'
 }
 
-group = 'com.github.rundeck-plugins'
+group = 'com.rundeck.plugins'
 
 ext.pluginName = 'Azure Storage Script Plugin'
 ext.pluginDescription = "Synchronize Azure Storage with a folder on remote nodes"
@@ -13,8 +14,16 @@ ext.buildDateString = new Date().format("yyyy-MM-dd'T'HH:mm:ssX")
 ext.archivesBaseName = "rundeck-azure-storage-plugin"
 ext.pluginBaseFolder = "."
 
-// Override version for Grails 7 upgrade
-project.version = '1.0.11-grails7-upgrade-test'
+scmVersion {
+    ignoreUncommittedChanges = false
+    tag {
+        prefix = ''           // NO "v" prefix - see PLUGIN_TAGGING_ARCHITECTURE.md
+        versionSeparator = ''
+    }
+    versionCreator 'simple'  // Use simple version creator (just tag name)
+}
+
+version = scmVersion.version  // Dynamic version from git tag
 ext.archiveFilename = ext.archivesBaseName + '-' + version 
 
 // Modern repository configuration
@@ -88,7 +97,31 @@ pluginZip.doFirst {
 publishing {
     publications {
         mavenZip(MavenPublication) {
-            artifact pluginZip
+            groupId = 'com.rundeck.plugins'
+            artifactId = 'rundeck-azure-storage-plugin'
+            version = project.version
+            
+            artifact(pluginZip) {
+                extension = 'jar'  // Publish as .jar to Maven (it's actually a zip)
+            }
+            
+            pom {
+                packaging = 'jar'
+            }
+        }
+    }
+    
+    repositories {
+        maven {
+            name = "PackageCloudTest"
+            url = uri("https://packagecloud.io/pagerduty/rundeckpro-test/maven2")
+            authentication {
+                header(HttpHeaderAuthentication)
+            }
+            credentials(HttpHeaderCredentials) {
+                name = "Authorization"
+                value = "Bearer " + (System.getenv("PKGCLD_WRITE_TOKEN") ?: project.findProperty("pkgcldWriteToken"))
+            }
         }
     }
 }
