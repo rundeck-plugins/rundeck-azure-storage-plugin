@@ -8,10 +8,10 @@ azure-storage-blob>=12.17.0
 python-magic>=0.4.27
 
 # HTTP client for async operations
-aiohttp>=3.8.5
+aiohttp>=3.13.3
 
 # CVE-2025-66471 / CVE-2025-66418
-urllib3>=2.6.0
+urllib3>=2.6.3
 
 # Additional security considerations:
 # - Use virtual environments to isolate dependencies
