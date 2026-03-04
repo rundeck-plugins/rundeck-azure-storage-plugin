@@ -4,6 +4,9 @@
 # Azure Storage SDK
 azure-storage-blob>=12.17.0
 
+# CVE-2026-21226 - Deserialization of untrusted data in azure-core
+azure-core>=1.38.0
+
 # File type detection
 python-magic>=0.4.27
 
