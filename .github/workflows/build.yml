@@ -1,11 +1,6 @@
 name: Build and Test
 
-on:
-  push:
-    branches: [ main, master, develop, grails7-upgrade ]
-  pull_request:
-    branches: [ main, master, develop, grails7-upgrade ]
-  workflow_dispatch:
+on: [push]
 
 permissions:
   contents: read
