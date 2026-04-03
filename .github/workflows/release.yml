@@ -3,8 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'  # Only trigger on version tags
-      - '*.*.*'   # Support both v-prefixed and non-prefixed tags
+      - '*.*.*'   # Push events to matching semver tags (no v prefix)
   workflow_dispatch:
     inputs:
       tag:
@@ -87,7 +86,7 @@ jobs:
           - Secure HTTPS-only connections
           
           ### Security Improvements
-          - Updated to modern Gradle 8.10.2
+          - Updated to modern Gradle 8.14.3
           - Enhanced build security
           - Secure Python dependency management
           
@@ -98,7 +97,7 @@ jobs:
           4. Install Python dependencies: `pip install -r requirements.txt`
           
           ### Requirements
-          - Java 8+ (for Rundeck)
+          - Java 17+ (for Rundeck 6.0)
           - Python 3.6+ with azure-storage-blob, python-magic, and aiohttp packages
           
           See the [README](https://github.com/rundeck-plugins/rundeck-azure-storage-plugin/blob/main/README.md) for detailed installation and usage instructions.
