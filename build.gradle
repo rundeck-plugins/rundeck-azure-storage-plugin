@@ -1,6 +1,6 @@
 plugins {
     id 'base'
-    id 'pl.allegro.tech.build.axion-release' version '1.18.11'
+    id 'pl.allegro.tech.build.axion-release' version '1.18.18'
     id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
 }
 
