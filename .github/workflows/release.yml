@@ -3,124 +3,41 @@ name: Release
 on:
   push:
     tags:
-      - '*.*.*'   # Push events to matching semver tags (no v prefix)
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag to release'
-        required: true
-        type: string
+      - '*.*.*' # Push events to matching semver tags (no v prefix)
 
-permissions:
-  contents: write
-  packages: write
+name: Publish Release
 
 jobs:
-  release:
-    name: Create Release
+  build:
+    name: Publish Release
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@v2
-        with:
-          egress-policy: audit
-
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Fetch tags
-        run: git fetch --tags --force
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'zulu'
-          cache: gradle
-
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v2
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v3
-        with:
-          gradle-home-cache-cleanup: true
-
-      - name: Make gradlew executable
-        run: chmod +x gradlew
-
-      - name: Build release
-        run: ./gradlew clean build --no-daemon --stacktrace
-
-      - name: Get version
+      - name: Build with Gradle
+        run: ./gradlew build
+      - name: Get Release Version
         id: get_version
+        run: VERSION=$(./gradlew currentVersion -q -Prelease.quiet) && echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+      - name: Create Release
+        id: create_release
         run: |
-          VERSION=$(./gradlew currentVersion -q -Prelease.quiet)
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Verify artifact exists
-        run: |
-          ARTIFACT_PATH="./build/libs/rundeck-azure-storage-plugin-${{ steps.get_version.outputs.VERSION }}.zip"
-          if [ ! -f "$ARTIFACT_PATH" ]; then
-            echo "Expected artifact not found: $ARTIFACT_PATH"
-            echo "Available files:"
-            ls -la ./build/libs/
-            exit 1
-          fi
-          echo "Artifact verified: $ARTIFACT_PATH"
-
-      - name: Generate release notes
-        id: release_notes
-        run: |
-          cat << 'EOF' > release_notes.md
-          ## Rundeck Azure Storage Plugin ${{ steps.get_version.outputs.VERSION }}
-          
-          ### Features
-          - Azure Storage integration for Rundeck
-          - Remote copy operations with Azure blobs
-          - Directory synchronization capabilities
-          - Secure HTTPS-only connections
-          
-          ### Security Improvements
-          - Updated to modern Gradle 8.14.3
-          - Enhanced build security
-          - Secure Python dependency management
-          
-          ### Installation
-          1. Download the plugin zip file
-          2. Copy to `$RDECK_BASE/libext/` folder
-          3. Restart Rundeck
-          4. Install Python dependencies: `pip install -r requirements.txt`
-          
-          ### Requirements
-          - Java 17+ (for Rundeck 6.0)
-          - Python 3.6+ with azure-storage-blob, python-magic, and aiohttp packages
-          
-          See the [README](https://github.com/rundeck-plugins/rundeck-azure-storage-plugin/blob/main/README.md) for detailed installation and usage instructions.
-          EOF
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ steps.get_version.outputs.VERSION }}
-          body_path: release_notes.md
-          files: |
-            ./build/libs/rundeck-azure-storage-plugin-${{ steps.get_version.outputs.VERSION }}.zip
+          gh release create \
+            --generate-notes \
+            --title 'Release ${{ steps.get_version.outputs.VERSION }}' \
+            ${{ github.ref_name }} \
+            build/libs/rundeck-azure-storage-plugin-${{ steps.get_version.outputs.VERSION }}.zip \
             requirements.txt
-          draft: false
-          prerelease: ${{ contains(github.ref_name, 'SNAPSHOT') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
-          generate_release_notes: true
-          make_latest: ${{ !contains(github.ref_name, 'SNAPSHOT') && !contains(github.ref_name, 'beta') && !contains(github.ref_name, 'alpha') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Publish to Maven Central
-        if: success() && !contains(github.ref_name, 'SNAPSHOT')
         run: ./gradlew -PsigningKey=${SIGNING_KEY_B64} -PsigningPassword=${SIGNING_PASSWORD} -PsonatypeUsername=${SONATYPE_USERNAME} -PsonatypePassword=${SONATYPE_PASSWORD} publishToSonatype closeAndReleaseSonatypeStagingRepository
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
