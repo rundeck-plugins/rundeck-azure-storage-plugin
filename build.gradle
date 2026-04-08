@@ -102,7 +102,9 @@ pluginZip.doFirst {
 nexusPublishing {
     packageGroup = 'org.rundeck.plugins'
     repositories {
-        sonatype()
+        sonatype {
+            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+        }
     }
 }
 
