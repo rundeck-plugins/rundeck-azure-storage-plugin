@@ -1,11 +1,11 @@
-name: Release
+name: Publish Release
 
 on:
   push:
     tags:
       - '*.*.*' # Push events to matching semver tags (no v prefix)
 
-name: Publish Release
+
 
 jobs:
   build:
