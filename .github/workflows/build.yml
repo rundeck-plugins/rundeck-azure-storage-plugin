@@ -17,6 +17,8 @@ jobs:
         egress-policy: audit
 
     - uses: rundeck-plugins/.github/.github/actions/setup-java@main
+      with:
+        java-version: '25'
     - name: Fetch tags
       run: git fetch --tags --force
 
